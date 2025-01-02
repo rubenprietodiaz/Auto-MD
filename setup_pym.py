@@ -94,8 +94,6 @@ pymemdyn -p complex.pdb --res {args.res} -w {args.w} -i {args.i} -l LIG {"--full
         f_pymemdyn.write(pymemdyn_content)
     os.chdir(start_dir)
 
-    print(f"Processing of {dir_name} complete. Remaining: {total_files - idx}")
-
 # Hacer una copia de seguridad de los archivos .pdb proporcionados
 os.makedirs("inputFiles", exist_ok=True)
 os.system("mv *.pdb inputFiles/")
