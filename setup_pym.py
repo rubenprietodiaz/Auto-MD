@@ -95,8 +95,8 @@ pymemdyn -p complex.pdb --res {args.res} -w {args.w} -i {args.i} -l LIG {"--full
     os.chdir(start_dir)
 
 # Hacer una copia de seguridad de los archivos .pdb proporcionados
-os.makedirs("inputFiles", exist_ok=True)
-os.system("mv *.pdb inputFiles/")
+os.makedirs("1.input_files", exist_ok=True)
+os.system("mv *.pdb 1.input_files/")
 
 # Crear el script submit_pym.sh
 with open("submit_pym.sh", "w") as f_submit:
@@ -111,4 +111,4 @@ with open("submit_pym.sh", "w") as f_submit:
     f_submit.write("    fi\n")
     f_submit.write("done\n")
     f_submit.write("echo 'All jobs submitted.'\n")
-print("All ligands processed. Provided PDB files were moved to inputFiles directory.")
+print("All ligands processed. Provided PDB files were moved to 1.input_files directory.")
