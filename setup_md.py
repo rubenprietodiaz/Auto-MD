@@ -147,7 +147,6 @@ def move_directories_to_pymemdyn(root_dir, exclude_dirs):
             shutil.move(item_path, pymemdyn_folder)
     print(f"Directories moved to '{pymemdyn_folder}'.")
 
-# Run script
 args = parse_arguments()
 destination_folder = "3.md"
 copy_files_in_directory(".", destination_folder)

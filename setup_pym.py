@@ -21,44 +21,40 @@ start_dir = os.getcwd()
 if args.cluster:
     print(f"Selected cluster: {args.cluster}.")
 
-# Cuenta el número de archivos .pdb que serán procesados
 pdb_files = [file for file in os.listdir(".") if file.endswith(".pdb") and file != args.protein]
-total_files = len(pdb_files)
+total_files = len(pdb_files) # Count the number of PDB files to process
 
-# Loop a través de los .pdb
 for idx, file in enumerate(pdb_files, start=1):
     dir_name = os.path.splitext(file)[0]
-    print(f"Processing ({idx}/{total_files}): {dir_name}")  # Muestra progreso
+    print(f"Processing ({idx}/{total_files}): {dir_name}")  # Show the progress
 
-    # Leer el contenido del archivo, eliminar líneas innecesarias y reemplazar identificadores
+    # Read the PDB file (ligands) and remove unnecessary lines
     with open(file, "r") as f:
         content = f.readlines()
     content = [line for line in content if not line.startswith(("END", "CONECT", "REMARK", "TITLE"))]
     content = [line.replace(args.l, "LIG") for line in content]
 
-    # Crear un directorio para el ligando y guardar el archivo modificado
+    # Create the ligand PDB file in its directory
     os.makedirs(dir_name, exist_ok=True)
     ligand_path = os.path.join(dir_name, "LIG.pdb")
     with open(ligand_path, "w") as f:
         f.writelines(content)
 
-    # Concatenar el archivo de proteína y el ligando para crear complex.pdb
+    # Generate the complex PDB file
     protein_path = args.protein
     complex_path = os.path.join(dir_name, "complex.pdb")
     with open(protein_path, "r") as f_protein, open(ligand_path, "r") as f_ligand, open(complex_path, "w") as f_complex:
         f_complex.write(f_protein.read())
         f_complex.write(f_ligand.read())
 
-    # Cambiar al directorio del ligando
-    os.chdir(dir_name)
-
-    # Ejecutar LigParGen y renombrar archivos
+    
+    os.chdir(dir_name) # Change to the directory to execute the following commands
     os.system(f"ligpargen -i LIG.pdb -cb 0 -ob 3 -r LIG -n LIG > ligpargen.log 2>&1")
     os.rename("LIG.gmx.gro", "LIG.gro")
     os.rename("LIG.openmm.pdb", "LIG.pdb")
     os.rename("LIG.gmx.itp", "LIG.itp")
 
-    # Crear el script pymemdyn.sh dentro del directorio
+    # PyMemDyn sbatch script
     pymemdyn_content = ""
     if args.cluster == "CSB":
         pymemdyn_content = f"""#!/bin/bash -l
@@ -94,11 +90,7 @@ pymemdyn -p complex.pdb --res {args.res} -w {args.w} -i {args.i} -l LIG {"--full
         f_pymemdyn.write(pymemdyn_content)
     os.chdir(start_dir)
 
-# Hacer una copia de seguridad de los archivos .pdb proporcionados
-os.makedirs("1.input_files", exist_ok=True)
-os.system("mv *.pdb 1.input_files/")
-
-# Crear el script submit_pym.sh
+# Sbatch script to submit all PyMemDyn jobs 
 with open("submit_pym.sh", "w") as f_submit:
     f_submit.write("#!/bin/bash\n\n")
     f_submit.write("echo 'Processing directories:'\n")
@@ -112,3 +104,7 @@ with open("submit_pym.sh", "w") as f_submit:
     f_submit.write("done\n")
     f_submit.write("echo 'All jobs submitted.'\n")
 print("All ligands processed. Provided PDB files were moved to 1.input_files directory.")
+
+# Hacer una copia de seguridad de los archivos .pdb proporcionados
+os.makedirs("1.input_files", exist_ok=True)
+os.system("mv *.pdb 1.input_files/")
